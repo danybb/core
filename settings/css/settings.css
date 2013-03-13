@@ -110,3 +110,10 @@ table.shareAPI td { padding-bottom: 0.8em; }
 /* HELP */
 .pressed {background-color:#DDD;}
 
+/* PASSWORD */
+.strengthify-wrapper {
+	position: absolute;
+	left: 185px;
+	width: 140px;
+	margin-top: -7px;
+}
