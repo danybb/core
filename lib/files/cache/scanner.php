@@ -36,6 +36,11 @@ class Scanner extends BasicEmitter {
 	 */
 	private $cache;
 
+	/**
+	 * @var \OC\Files\Cache\Permissions $permissionsCache
+	 */
+	private $permissionsCache;
+
 	const SCAN_RECURSIVE = true;
 	const SCAN_SHALLOW = false;
 
@@ -46,6 +51,7 @@ class Scanner extends BasicEmitter {
 		$this->storage = $storage;
 		$this->storageId = $this->storage->getId();
 		$this->cache = $storage->getCache();
+		$this->permissionsCache = $storage->getPermissionsCache();
 	}
 
 	/**
@@ -96,7 +102,11 @@ class Scanner extends BasicEmitter {
 					}
 				}
 				$newData = $data;
-				if ($reuseExisting and $cacheData = $this->cache->get($file)) {
+				$cacheData = $this->cache->get($file);
+				if ($cacheData) {
+					$this->permissionsCache->remove($cacheData['fileid']);
+				}
+				if ($reuseExisting and $cacheData) {
 					// only reuse data if the file hasn't explicitly changed
 					if (isset($data['mtime']) && isset($cacheData['mtime']) && $data['mtime'] === $cacheData['mtime']) {
 						if (($reuseExisting & self::REUSE_SIZE) && ($data['size'] === -1)) {
@@ -159,7 +169,7 @@ class Scanner extends BasicEmitter {
 		$newChildren = array();
 		if ($this->storage->is_dir($path) && ($dh = $this->storage->opendir($path))) {
 			\OC_DB::beginTransaction();
-			if(is_resource($dh)) {
+			if (is_resource($dh)) {
 				while (($file = readdir($dh)) !== false) {
 					$child = ($path) ? $path . '/' . $file : $file;
 					if (!Filesystem::isIgnoredDir($file)) {
